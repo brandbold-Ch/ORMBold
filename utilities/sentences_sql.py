@@ -71,7 +71,7 @@ class SQLGenerator:
     @staticmethod
     def varchar(size: int, null: bool = True, unique: bool = False, charset: str = None,
                 choices: tuple = None,
-                primary_key: bool = False):
+                primary_key: bool = False) -> str:
 
         constrains: list = []
         sql: str = 'N'
