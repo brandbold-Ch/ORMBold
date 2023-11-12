@@ -2,63 +2,37 @@ import psycopg2
 
 
 class SQLGenerator:
-    def __init__(self, dbname: str, user: str, password: str, host: str = '127.0.0.1', port: int = 5432) -> None:
-        self.dbname: str = dbname
-        self.user: str = user
-        self.password: str = password
-        self.host: str = host
-        self.port: int = port
 
-    @classmethod
-    def connection(cls, *args) -> psycopg2:
+    def __init__(self, dbname: str = None, user: str = None, password: str = None, host: str = '127.0.0.1',
+                 port: int = 5432) -> None:
+        self.__dbname: str = dbname
+        self.__user: str = user
+        self.__password: str = password
+        self.__host: str = host
+        self.__port: int = port
+
+    def __connection(self) -> psycopg2:
         conn: psycopg2 = psycopg2.connect(
-            dbname=cls.dbname,
-            user=cls.user,
-            password=cls.password,
-            host=cls.host,
-            port=cls.port
+            dbname=self.__dbname,
+            user=self.__user,
+            password=self.__password,
+            host=self.__host,
+            port=self.__port
         )
         return conn
 
-    @property
-    def dbname(self) -> str:
-        return self.dbname
+    def execute(self, sentence):
+        try:
+            connection: psycopg2 = self.__connection()
+            cursor: psycopg2 = connection.cursor()
+            cursor.execute(sentence)
+            connection.commit()
+            cursor.close()
+            connection.close()
 
-    @property
-    def user(self) -> str:
-        return self.user
-
-    @property
-    def password(self) -> str:
-        return self.password
-
-    @property
-    def host(self) -> str:
-        return self.host
-
-    @property
-    def port(self) -> int:
-        return self.port
-
-    @dbname.setter
-    def dbname(self, db: str):
-        self.dbname = db
-
-    @user.setter
-    def user(self, user: str):
-        self.user = user
-
-    @password.setter
-    def password(self, password: str):
-        self.password = password
-
-    @host.setter
-    def host(self, host: str):
-        self.host = host
-
-    @port.setter
-    def port(self, port: str):
-        self.port = port
+            print("Finished")
+        except Exception as e:
+            print(e)
 
     @staticmethod
     def create_table(table_name: str, fields: str):
@@ -69,40 +43,35 @@ class SQLGenerator:
         return sql
 
     @staticmethod
+    def insert(table, **kwargs) -> str:
+        values: list = list(map(lambda x: f"'{x}'", list(kwargs.values())))
+
+        return f"""
+        INSERT INTO {table} ({', '.join(list(kwargs))})
+        VALUES ({', '.join(values)});
+        """
+
+    @staticmethod
+    def integer():
+        pass
+
+    @staticmethod
+    def date():
+        pass
+
+    @staticmethod
     def varchar(size: int, null: bool = True, unique: bool = False, charset: str = None,
                 choices: tuple = None,
                 primary_key: bool = False) -> str:
 
-        constrains: list = []
-        sql: str = 'N'
+        constrains: list = [
+            'V',
+            f'VARCHAR({size})',
+            'NULL' if null else 'NOT NULL',
+            'UNIQUE' if unique else '',
+            'PRIMARY KEY' if primary_key else ''
+        ]
 
-        if size:
-            constrains.append(f'VARCHAR({size})')
-        else:
-            raise Exception('Se necesita el tamaño del campo')
+        constrains = list(filter(lambda x: x if x != '' else None, constrains))
 
-        if null:
-            constrains.append('NULL')
-        else:
-            constrains.append('NOT NULL')
-
-        if unique:
-            constrains.append('UNIQUE')
-        else:
-            pass
-
-        if choices is not None:
-            constrains.append(f'ENUM{choices}')
-        else:
-            pass
-
-        if primary_key:
-            constrains.append('PRIMARY KEY')
-        else:
-            pass
-
-        for options in constrains:
-            sql += f' {options}'
-
-        return sql
-    
+        return ' '.join(constrains)
