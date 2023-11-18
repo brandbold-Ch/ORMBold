@@ -1,10 +1,15 @@
 import psycopg2
+from utilities.sql_types import Types
+from utilities.sql_dialect import SqlDialect
+from typing import List, Tuple
 
 
-class SQLGenerator:
+class SQLGenerator(Types, SqlDialect):
 
     def __init__(self, dbname: str = None, user: str = None, password: str = None, host: str = '127.0.0.1',
                  port: int = 5432) -> None:
+        Types.__init__(self)
+        SqlDialect.__init__(self)
         self.__dbname: str = dbname
         self.__user: str = user
         self.__password: str = password
@@ -34,44 +39,29 @@ class SQLGenerator:
         except Exception as e:
             print(e)
 
-    @staticmethod
-    def create_table(table_name: str, fields: str):
-        sql = f"""
-        CREATE TABLE IF NOT EXISTS {table_name} (
-            {fields}
-        );"""
-        return sql
-
-    @staticmethod
-    def insert(table, **kwargs) -> str:
-        values: list = list(map(lambda x: f"'{x}'", list(kwargs.values())))
-
-        return f"""
-        INSERT INTO {table} ({', '.join(list(kwargs))})
-        VALUES ({', '.join(values)});
-        """
-
-    @staticmethod
-    def integer():
+    def find(self, table: str, **kwargs) -> str:
         pass
 
-    @staticmethod
-    def date():
+    def filter(self, table: str, **kwargs) -> str:
         pass
 
-    @staticmethod
-    def varchar(size: int, null: bool = True, unique: bool = False, charset: str = None,
-                choices: tuple = None,
-                primary_key: bool = False) -> str:
+    def all(self, table: str, order_by: str = None) -> str:
+        pass
 
-        constrains: list = [
-            'V',
-            f'VARCHAR({size})',
-            'NULL' if null else 'NOT NULL',
-            'UNIQUE' if unique else '',
-            'PRIMARY KEY' if primary_key else ''
-        ]
+    def create_table(self, table_name: str, fields: List[Tuple[str, str]]) -> str:
+        return super().create_table(table_name, fields)
 
-        constrains = list(filter(lambda x: x if x != '' else None, constrains))
+    def insert(self, table, **kwargs) -> str:
+        return super().insert(table, **kwargs)
 
-        return ' '.join(constrains)
+    def delete(self, table, **kwargs) -> str:
+        return super().delete(table, **kwargs)
+
+    def integer(self):
+        pass
+
+    def date(self):
+        pass
+
+    def varchar(self, size: int, null: bool = True, unique: bool = False, primary_key: bool = False) -> str:
+        return super().varchar(size, null, unique, primary_key)

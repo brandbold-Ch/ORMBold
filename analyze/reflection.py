@@ -1,74 +1,62 @@
-from models.model import Model
 from utilities.sentences_sql import SQLGenerator
+from typing import List, Tuple
 
 
 class Reflect:
     def __init__(self, cls: object) -> None:
         self.cls: cls = cls
-        self.persistence: SQLGenerator = SQLGenerator('postgres', 'postgres', 'elefante')
+        self.dialect: SQLGenerator = SQLGenerator('postgres', 'postgres', 'elefante')
         self.init()
-        self.runDynamically()
+        self.run_dynamically()
 
-    def getAllMethods(self) -> dict:
+    def get_all_methods(self) -> dict:
         return self.cls.__class__.__dict__
 
-    def getNameClass(self) -> str:
+    def get_name_class(self) -> str:
         return self.cls.__class__.__name__.lower()
 
-    def objFields(self) -> dict:
+    def obj_fields(self) -> dict:
         return self.cls.__dict__
 
-    def getDeclaredMethods(self) -> None:
-        context = self.getAllMethods()
+    def get_declared_methods(self) -> None:
+        context = self.get_all_methods()
         for obj in context:
             if isinstance(type(context[obj]), type(lambda: None)):
                 print(str(context[obj]).split(' ')[1].split('.')[1])
 
-    def classFields(self) -> list:
-        fields: list = []
+    def class_fields(self) -> List[Tuple[str, str]]:
+        fields: List[Tuple[str, str]] = []
 
-        for i in self.getAllMethods():
-            if not str(i).startswith('__'):
+        for i in self.get_all_methods():
+            if not str(i).startswith('__' and '_'):
                 fields.append((i, eval(f'self.cls.{i}')))
 
         return fields
 
     def init(self) -> None:
-        fields: list = self.classFields()
-        sql: str = ''
-
-        for i, j in enumerate(fields):
-            sql += f'{str(j[1]).replace("V", j[0], 1)}{", " if len(fields) - i  > 1 else ""}'
-
-        self.persistence.execute(
-            SQLGenerator.create_table(self.getNameClass(), sql)
+        self.dialect.execute(
+            self.dialect.create_table(self.get_name_class(), self.class_fields())
         )
 
-    def runDynamically(self):
-        for method in self.objFields().get('called'):
+    def run_dynamically(self) -> None:
+        for method in self.obj_fields().get('_Model__called'):
             match method[0]:
+
                 case 'insert_values':
-                    self.persistence.execute(
-                        SQLGenerator.insert(self.getNameClass(), **method[1])
+                    self.dialect.execute(
+                        self.dialect.insert(self.get_name_class(), **method[1])
                     )
                     break
 
+                case 'delete':
+                    self.dialect.execute(
+                        self.dialect.delete(self.get_name_class(), **method[1])
+                    )
+                    break
 
-class Employed(Model):
-    name = Model.varchar(size=50)
-    lastname = Model.varchar(size=50, unique=True)
-    email = Model.varchar(size=40, unique=True, primary_key=True)
-    gender = Model.varchar(size=10)
-    salary = Model.varchar(size=20)
-
-
-if __name__ == '__main__':
-    test = Employed()
-    test.insert_values(
-        name='Pablo Julián',
-        lastname='Garay de León',
-        email='pablo@gmail.com',
-        gender='Men',
-        salary='1500'
-    )
-    orm = Reflect(test)
+                case 'all':
+                    self.dialect.execute(
+                        self.dialect.all(self.get_name_class(), method[1])
+                    )
+                    break
+                    
