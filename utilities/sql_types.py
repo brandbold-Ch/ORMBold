@@ -1,4 +1,4 @@
-from bases.types import BaseTypes
+from bases.sql.type_data.types import BaseTypes
 
 
 class Functions:
@@ -12,13 +12,13 @@ class Types(BaseTypes):
         pass
 
     @staticmethod
-    def setId(function: str, unique: bool = False, primary_key: bool = False) -> str:
+    def Id(default: str, unique: bool = False, primary_key: bool = False) -> str:
 
-        if Functions.UUID or function or Functions.AUTOINCREMENT:
+        if Functions.UUID or default or Functions.AUTOINCREMENT:
 
             constrains: list = [
                 'V',
-                f'UUID DEFAULT {Functions.UUID}' if function == Functions.UUID else Functions.AUTOINCREMENT,
+                f'UUID DEFAULT {Functions.UUID}' if default == Functions.UUID else Functions.AUTOINCREMENT,
                 'UNIQUE' if unique else '',
                 'PRIMARY KEY' if primary_key else ''
             ]

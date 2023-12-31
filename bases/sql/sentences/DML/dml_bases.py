@@ -1,24 +1,24 @@
 from abc import ABC, abstractmethod
 
 
-class BaseTypes(ABC):
+class DMLBases(ABC):
 
     @staticmethod
     @abstractmethod
-    def setId(function: str) -> str:
+    def insert_into(table: str, **kwargs) -> str:
         pass
 
     @staticmethod
     @abstractmethod
-    def integer() -> str:
+    def delete(table: str, **kwargs) -> str:
         pass
 
     @staticmethod
     @abstractmethod
-    def date() -> str:
+    def update(table: str, **kwargs) -> str:
         pass
 
     @staticmethod
     @abstractmethod
-    def varchar(size: int, null: bool = True, unique: bool = False, primary_key: bool = False) -> str:
+    def select(table: str, order_by: str = None) -> str:
         pass

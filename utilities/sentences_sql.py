@@ -1,58 +1,38 @@
-import psycopg2
 from utilities.sql_types import Types
-from utilities.sql_dialect import SqlDialect
-from typing import List, Tuple
+from psycopg2.extensions import connection
+from languajes.postgres.DML.dml import DML
+from languajes.postgres.DDL.ddl import DDL
+from connection.postgres.postgres_connection import PostgresConnection
+from typing import List, Tuple, Any
 
 
-class SQLGenerator(Types, SqlDialect):
+class PostgresSQLGenerator(Types, DML, DDL, PostgresConnection):
 
-    def __init__(self, dbname: str = None, user: str = None, password: str = None, host: str = '127.0.0.1',
-                 port: int = 5432) -> None:
+    def __init__(self, dbname: str, user: str, password: str, host: str, port: int):
         Types.__init__(self)
-        SqlDialect.__init__(self)
-        self.__dbname: str = dbname
-        self.__user: str = user
-        self.__password: str = password
-        self.__host: str = host
-        self.__port: int = port
+        DML.__init__(self)
+        PostgresConnection.__init__(self, dbname, user, password, host, port)
 
-    def __connection(self) -> psycopg2:
-        conn: psycopg2 = psycopg2.connect(
-            dbname=self.__dbname,
-            user=self.__user,
-            password=self.__password,
-            host=self.__host,
-            port=self.__port
-        )
-        return conn
+    def connection(self) -> connection:
+        return super().connection()
 
-    def execute(self, sentence):
-        try:
-            connection: psycopg2 = self.__connection()
-            cursor: psycopg2 = connection.cursor()
-            cursor.execute(sentence)
-            connection.commit()
-            cursor.close()
-            connection.close()
+    def execute_normal(self, sentence_sql: str) -> None:
+        super().execute_normal(sentence_sql)
 
-            print("Finished")
-        except Exception as e:
-            print(e)
+    def execute_extra(self, sentence_sql: str) -> List[Tuple[Any, ...]]:
+        return super().execute_extra(sentence_sql)
 
-    def find(self, table: str, **kwargs) -> str:
+    def update(self, table: str, **kwargs) -> str:
         pass
 
-    def filter(self, table: str, **kwargs) -> str:
-        pass
-
-    def all(self, table: str, order_by: str = None) -> str:
-        pass
+    def select(self, table: str, order_by: str = None) -> str:
+        return super().select(table, order_by)
 
     def create_table(self, table_name: str, fields: List[Tuple[str, str]]) -> str:
         return super().create_table(table_name, fields)
 
-    def insert(self, table, **kwargs) -> str:
-        return super().insert(table, **kwargs)
+    def insert_into(self, table, **kwargs) -> str:
+        return super().insert_into(table, **kwargs)
 
     def delete(self, table, **kwargs) -> str:
         return super().delete(table, **kwargs)
