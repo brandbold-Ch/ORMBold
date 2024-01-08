@@ -1,21 +1,12 @@
 from models.model import Model
-from utilities.sql_types import Functions
-
-
-DATABASE_CONFIG = {
-    "engine": "postgres",
-    "user": "postgres",
-    "dbname": "postgres",
-    "host": "127.0.0.1",
-    "port": 5432,
-    "password": "mypostgres"
-}
+from core.db.models import Varchar, UUID, Serial
 
 
 class Employed(Model):
-    id = Model.Id(default=Functions.UUID, primary_key=True, unique=True)
-    name = Model.varchar(size=50)
-    lastname = Model.varchar(size=50, null=True)
-    email = Model.varchar(size=40, unique=True)
-    gender = Model.varchar(size=10)
-    salary = Model.varchar(size=20)
+    id_user = UUID(primary_key=True, auto=True)
+    name = Varchar(size=50)
+    lastname = Varchar(size=50)
+    email = Varchar(size=40)
+    gender = Varchar(size=10)
+    salary = Varchar(size=20)
+    role = Varchar(size=40, default='Worker')
